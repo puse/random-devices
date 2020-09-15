@@ -3,3 +3,6 @@
 
 # production
 build/
+
+# docs
+.adr-templates
