@@ -1,16 +1,22 @@
-import { Pair } from './common-types.ts';
+import { Pair, RandomNumberGenerator, CoinSide } from "./common-types.ts";
+
+/** Pick a side for given index based on ratio */
+const sideFor = (ratio: number, index: number): CoinSide => {
+  const offset = 1 / (ratio + 1);
+  return offset < index ? 0 : 1;
+};
 
 /**
- * Pick a random element from given pair. Choice of option is biased by `ratio`
+ * Pick one *randomly* from given options pair.
+ * Choice of option is biased by `ratio`
  *
- *    flipBiasedCoin(0.8, ['a', 'b'], Math.random());
+ *    flipBiasedCoin(Math.random, 2/3, ['a', 'b']);
  */
 
 export function flipBiasedCoin<T>(
+  rng: RandomNumberGenerator,
   ratio: number,
   options: Pair<T>,
-  random: number,
 ) {
-  const side = ratio < random ? 0 : 1;
-  return options[side];
+  return options[sideFor(ratio, rng())];
 }
