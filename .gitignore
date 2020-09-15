@@ -6,3 +6,13 @@ build/
 
 # docs
 .adr-templates
+
+# Logs
+logs
+*.log
+
+# dotenv environment variables file
+.env
+
+# deno plugins
+.deno_plugins/
