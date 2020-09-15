@@ -1,4 +1,4 @@
-import { Pair, RandomNumberGenerator, CoinSide } from "./common-types.ts";
+import type { Pair, RandomNumberGenerator, CoinSide } from "./common-types.ts";
 
 /** Pick a side for given index based on ratio */
 const sideFor = (ratio: number, index: number): CoinSide => {
