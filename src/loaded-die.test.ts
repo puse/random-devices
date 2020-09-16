@@ -5,57 +5,72 @@ import {
 import { createBiasedCoin, flipBiasedCoin } from "./biased-coin.ts";
 import { RandomNumberGenerator } from "./common-types.ts";
 
-type LoadedDie<T> = {
-  sides: T[];
-  loads: number[];
+type WeightedOptions<T> = Map<T, number>;
+
+type WeightedOptionEntry<T> = [T, number];
+type WeightedOption<T> = {
+  value: T;
+  weight: number;
 };
 
-function rollLoadedDie<T>(rng: RandomNumberGenerator, die: LoadedDie<T>): T {
-  let idx = 0;
-  let selection;
+const toWeightedOption = <T>(
+  entry: WeightedOptionEntry<T>,
+): WeightedOption<T> => {
+  const [value, weight] = entry;
 
-  const totalLoad = die.loads.reduce((a, b) => a + b, 0);
+  return {
+    value,
+    weight,
+  };
+};
 
-  do {
-    idx++;
-    if (idx === die.sides.length) {
-      idx = 0;
-    }
+function rollLoadedDie<T>(
+  rng: RandomNumberGenerator,
+  options: WeightedOptions<T>,
+): T {
+  const entries = Array
+    .from(options.entries())
+    .map(toWeightedOption);
 
-    const ratio = die.loads[idx] / totalLoad;
-    const coin = createBiasedCoin<boolean>(ratio, [true, false]);
+  const totalWeight = Array
+    .from(options.values())
+    .reduce((a, b) => a + b, 0);
 
-    if (flipBiasedCoin(rng, coin)) {
-      selection = die.sides[idx];
-    }
-  } while (selection === undefined);
+  const pickEventually = (nthAttempt: number = 0): T => {
+    const entry = entries[nthAttempt % options.size];
+    const coin = createBiasedCoin(entry.weight / totalWeight, [true, false]);
+    return flipBiasedCoin(rng, coin)
+      ? entry.value
+      : pickEventually(nthAttempt + 1);
+  };
 
-  return die.sides[idx];
+  return pickEventually();
 }
 
 Deno.test("rollLoadedDie - signature", () => {
-  const sides = [1, 2, 3, 4, 5, 6];
+  const options = new Map<string, number>([
+    ["a", 1],
+    ["b", 2],
+    ["c", 3],
+    ["d", 6],
+  ]);
+  const result = rollLoadedDie(Math.random, options);
 
-  const die = {
-    sides,
-    loads: [1, 2, 3, 4, 5, 6],
-  };
-  const result = rollLoadedDie(Math.random, die);
-
-  assertArrayContains(sides, [result]);
+  assertArrayContains(Array.from(options.keys()), Array.of(result));
 });
 
 Deno.test("rollLoadedDie - distribution", () => {
-  const die = {
-    sides: [1, 2, 3, 4, 5, 6],
-    loads: [1, 2, 3, 5, 8, 13],
-  };
-
-  const rollOnce = () => rollLoadedDie(Math.random, die);
+  const options = new Map<string, number>([
+    ["a", 1],
+    ["b", 2],
+    ["c", 3],
+    ["d", 6],
+  ]);
+  const rollOnce = () => rollLoadedDie(Math.random, options);
   const results = Array.from(new Array(1000), rollOnce);
 
   // aggregate stats
-  const countDistinct = (acc: Record<string, number>, result: number) => {
+  const countDistinct = (acc: Record<string, number>, result: string) => {
     if (acc[result] === undefined) {
       acc[result] = 0;
     }
