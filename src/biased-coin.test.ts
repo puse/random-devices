@@ -9,7 +9,7 @@ import { createBiasedCoin, flipBiasedCoin } from "./biased-coin.ts";
 
 Deno.test("createBiasedCoin - signature", () => {
   const sides = ["head", "tail"] as Pair<string>;
-  const ratio = 2 / 3;
+  const ratio = 1 / 4;
 
   const coin = createBiasedCoin(ratio, sides);
 
@@ -18,26 +18,27 @@ Deno.test("createBiasedCoin - signature", () => {
 });
 
 Deno.test("flipBiasedCoin - signature", () => {
-  const options = [1, 2] as Pair<number>;
+  const coin = createBiasedCoin(1 / 4, ["head", "tail"]);
 
-  const assertValidOption = (expected: number, msg?: string) =>
-    assertArrayContains(options, [expected], msg);
+  const assertValidOption = (expected: string, msg?: string) =>
+    assertArrayContains(coin.sides, [expected], msg);
 
-  assertValidOption(flipBiasedCoin(Math.random, 1 / 2, options));
+  assertValidOption(flipBiasedCoin(Math.random, coin));
 });
 
 Deno.test("flipBiasedCoin - distribution", () => {
-  const flip = () => flipBiasedCoin(Math.random, 0.66, ["a", "b"]);
-  const results = Array.from(new Array(100), flip);
-
-  const countDistinct = (acc: Record<string, number>, option: string) => {
-    acc[option]++;
+  const coin = createBiasedCoin(1 / 4, ["head", "tail"]);
+  const flipOnce = () => flipBiasedCoin(Math.random, coin);
+  const results = Array.from(new Array(100), flipOnce);
+  // aggregate stats
+  const countDistinct = (acc: Record<string, number>, result: string) => {
+    acc[result]++;
     return acc;
   };
-  const stats = results.reduce(countDistinct, { a: 0, b: 0 });
-
-  assert(stats.a < stats.b);
-
+  const stats = results.reduce(countDistinct, { tail: 0, head: 0 });
+  // print for visual inspection
   console.log("\n");
   console.table(stats);
+  // check (rought)
+  assert(stats.head < stats.tail);
 });
