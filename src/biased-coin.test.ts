@@ -1,10 +1,21 @@
 import {
   assert,
   assertArrayContains,
+  assertEquals,
 } from "https://deno.land/x/std@0.65.0/testing/asserts.ts";
 
 import type { Pair } from "./common-types.ts";
-import { flipBiasedCoin } from "./biased-coin.ts";
+import { createBiasedCoin, flipBiasedCoin } from "./biased-coin.ts";
+
+Deno.test("createBiasedCoin - signature", () => {
+  const sides = ["head", "tail"] as Pair<string>;
+  const ratio = 2 / 3;
+
+  const coin = createBiasedCoin(ratio, sides);
+
+  assertEquals(coin.ratio, ratio);
+  assertEquals(coin.sides, sides);
+});
 
 Deno.test("flipBiasedCoin - signature", () => {
   const options = [1, 2] as Pair<number>;
