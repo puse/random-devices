@@ -1,33 +1,20 @@
-import type { Pair, RandomNumberGenerator } from "./common-types.ts";
+import type { Pair, RandomNumberGenerator } from "./common-utils.ts";
 
-export type BiasedCoin<T> = {
-  ratio: number;
-  sides: Pair<T>;
-};
-
-export function createBiasedCoin<T>(
-  ratio: number,
-  sides: Pair<T>,
-): BiasedCoin<T> {
-  return {
-    ratio,
-    sides,
-  };
-}
+import type { WeightedOption } from "./weighted-option.ts";
 
 /**
  * Pick one *randomly* from given biased coin.
  * Choice of option is biased by `ratio`
  *
- *    const coin = createBiasedCoin(1 / 3, ['a', 'b']);
+ *    const coin = createBiasedCoin(['head', 3], ['tail', 4]);
  *    flipBiasedCoin(Math.random, coin);
  */
 
 export function flipBiasedCoin<T>(
   rng: RandomNumberGenerator,
-  coin: BiasedCoin<T>,
+  options: Pair<WeightedOption<T>>,
 ): T {
-  const headRange = coin.ratio / (coin.ratio + 1);
-  const [head, tail] = coin.sides;
-  return rng() < headRange ? head : tail;
+  // coin logic
+  const [[v1, w1], [v2, w2]] = options;
+  return rng() < w1 / (w1 + w2) ? v1 : v2;
 }

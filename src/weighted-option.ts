@@ -27,7 +27,7 @@ export function splitByWeight<T>(
   option: WeightedOption<T>,
 ): WeightedOption<T>[] {
   if (weightOf(option) < deltaWeight) {
-    throw new RangeError(`Can't take take away ${deltaWeight}`);
+    throw new RangeError(`Can't take away ${deltaWeight}`);
   }
 
   return [

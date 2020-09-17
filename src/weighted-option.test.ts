@@ -1,5 +1,6 @@
 import {
-  assertEquals, assertThrows,
+  assertEquals,
+  assertThrows,
 } from "https://deno.land/x/std@0.65.0/testing/asserts.ts";
 
 import {

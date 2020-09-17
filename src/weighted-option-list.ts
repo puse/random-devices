@@ -2,7 +2,7 @@ import type { WeightedOption } from "./weighted-option.ts";
 
 import { weightOf, splitByWeight } from "./weighted-option.ts";
 
-import { popOneBy } from "./common-utils.ts";
+import { popOneBySafe } from "./common-utils.ts";
 
 export function totalWeightFor<T>(options: WeightedOption<T>[]): number {
   return options
@@ -14,23 +14,20 @@ export function meanWeightFor<T>(options: WeightedOption<T>[]): number {
   return totalWeightFor(options) / options.length;
 }
 
-export function popUnderWeight<T>(
+export function popUnderWeightSafe<T>(
   offset: number,
   options: WeightedOption<T>[],
-): [WeightedOption<T> | null, WeightedOption<T>[]] {
-  return popOneBy((option) => weightOf(option) < offset, options);
+): [WeightedOption<T>, WeightedOption<T>[]] {
+  const lt = (option: WeightedOption<T>) => weightOf(option) < offset;
+  return popOneBySafe(lt, options);
 }
 
 export function popOverWeightSafe<T>(
   offset: number,
   options: WeightedOption<T>[],
 ): [WeightedOption<T>, WeightedOption<T>[]] {
-  const lteOffset = (option: WeightedOption<T>) => weightOf(option) > offset;
-  const [overweight, restOptions] = popOneBy(lteOffset, options);
-  if (!overweight) {
-    throw new RangeError("No overweight option found");
-  }
-  return [overweight, restOptions];
+  const gt = (option: WeightedOption<T>) => weightOf(option) > offset;
+  return popOneBySafe(gt, options);
 }
 
 export function slicePartialOverWeight<T>(
