@@ -3,7 +3,8 @@ import {
   assertArrayContains,
 } from "https://deno.land/x/std@0.65.0/testing/asserts.ts";
 
-import type { WeightedOption } from './loaded-die.ts';
+import type { WeightedOption } from './weighted-option.ts';
+
 import { rollLoadedDie, nthBalancedOption } from "./loaded-die.ts";
 
 Deno.test("rollLoadedDie - signature", () => {
