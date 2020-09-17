@@ -5,7 +5,7 @@ import {
 
 import type { WeightedOption } from './weighted-option.ts';
 
-import { rollLoadedDie, nthBalancedOption } from "./loaded-die.ts";
+import { rollLoadedDie } from "./loaded-die.ts";
 
 Deno.test("rollLoadedDie - signature", () => {
   const options = new Map<string, number>([
@@ -49,22 +49,4 @@ Deno.test("rollLoadedDie - distribution", () => {
   console.table(stats);
 
   assert(true);
-});
-
-Deno.test("alias table", () => {
-  const options: WeightedOption<string>[] = [
-    ["a", 1],
-    ["b", 2],
-    ["c", 3],
-    ["d", 6],
-  ];
-
-  const table = [
-    [["a", 1], ["d", 2]],
-    [["b", 2], ["d", 1]],
-    [["c", 3]],
-    [["d", 3]],
-  ];
-
-  console.log(nthBalancedOption(1, options));
 });

@@ -1,33 +1,24 @@
 import {
   assert,
   assertArrayContains,
-  assertEquals,
 } from "https://deno.land/x/std@0.65.0/testing/asserts.ts";
 
-import type { Pair } from "./common-types.ts";
-import { createBiasedCoin, flipBiasedCoin } from "./biased-coin.ts";
-
-Deno.test("createBiasedCoin - signature", () => {
-  const sides = ["head", "tail"] as Pair<string>;
-  const ratio = 1 / 4;
-
-  const coin = createBiasedCoin(ratio, sides);
-
-  assertEquals(coin.ratio, ratio);
-  assertEquals(coin.sides, sides);
-});
+import { flipBiasedCoin } from "./biased-coin.ts";
+import { pair } from "./common-utils.ts";
+import { WeightedOption } from "./weighted-option.ts";
 
 Deno.test("flipBiasedCoin - signature", () => {
-  const coin = createBiasedCoin(1 / 4, ["head", "tail"]);
+  const coin = pair<WeightedOption<string>>(["head", 1], ["tail", 4]);
 
   const assertValidOption = (expected: string, msg?: string) =>
-    assertArrayContains(coin.sides, [expected], msg);
+    assertArrayContains(["head", "tail"], [expected], msg);
 
   assertValidOption(flipBiasedCoin(Math.random, coin));
 });
 
 Deno.test("flipBiasedCoin - distribution", () => {
-  const coin = createBiasedCoin(1 / 4, ["head", "tail"]);
+  const coin = pair<WeightedOption<string>>(["head", 1], ["tail", 2]);
+
   const flipOnce = () => flipBiasedCoin(Math.random, coin);
   const results = Array.from(new Array(100), flipOnce);
   // aggregate stats
