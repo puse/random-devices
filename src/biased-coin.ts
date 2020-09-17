@@ -1,4 +1,4 @@
-import type { Pair, RandomNumberGenerator } from "./common-types.ts";
+import type { Pair, RandomNumberGenerator } from "./common-utils.ts";
 
 import type { WeightedOption } from "./weighted-option.ts";
 

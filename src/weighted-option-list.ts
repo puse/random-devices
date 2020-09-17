@@ -4,10 +4,6 @@ import { weightOf, splitByWeight } from "./weighted-option.ts";
 
 import { popOneBySafe } from "./common-utils.ts";
 
-export function singleton<T>(option: WeightedOption<T>): [WeightedOption<T>] {
-  return [option];
-}
-
 export function totalWeightFor<T>(options: WeightedOption<T>[]): number {
   return options
     .map(weightOf)

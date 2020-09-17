@@ -1,11 +1,10 @@
-import { pair } from './common-utils.ts';
-import type { Pair, RandomNumberGenerator } from "./common-types.ts";
+import { pair, singleton } from "./common-utils.ts";
+import type { Pair, RandomNumberGenerator } from "./common-utils.ts";
 
 import { valueOf, weightOf } from "./weighted-option.ts";
 import type { WeightedOption } from "./weighted-option.ts";
 
 import {
-  singleton,
   meanWeightFor,
   slicePartialOverWeight,
   popUnderWeightSafe,
@@ -41,9 +40,8 @@ const nthUnbalancedOption = <T>(
       return nthUnbalancedOption(idx - 1, restOptions2);
     }
   } catch (err) {
-    return nthBalancedOption(idx, options)
+    return nthBalancedOption(idx, options);
   }
-
 };
 
 export function rollLoadedDie<T>(
@@ -55,7 +53,8 @@ export function rollLoadedDie<T>(
       // constant
       return valueOf(options[0]);
     case 2:
-      return flipBiasedCoin(Math.random, options as Pair<WeightedOption<T>>);
+      const coinOptions = options as Pair<WeightedOption<T>>;
+      return flipBiasedCoin(Math.random, coinOptions);
     default:
       // loaded die logic
       const idx = Math.floor(rng() * options.length);
