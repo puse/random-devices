@@ -1,60 +1,60 @@
-import { RandomNumberGenerator } from "./common-types.ts";
+import type {RandomNumberGenerator} from "./common-types.ts";
 
-export const makeTable = (options: [unknown, number][]) => {
-  const card = options.length;
+import type {WeightedOption} from "./weighted-option.ts";
 
-  const totalWeight = options
-    .map(([_, weight]) => weight)
-    .reduce((a, b) => a + b);
-  const meanWeight = totalWeight / card;
+import {
+  meanWeightFor,
+  popUnderWeight,
+  slicePartialOverWeight,
+} from "./weighted-option-list.ts";
 
-  const acc = [];
+export const nthBalancedOption = <T>(
+  idx: number,
+  options: WeightedOption<T>[],
+): WeightedOption<T>[] => {
+  const meanWeight = meanWeightFor(options);
 
-  while (acc.length < card) {
-    const probeIdx = options.findIndex(([_, weight]) => weight < meanWeight);
+  const [probe, restOptions] = popUnderWeight(meanWeight, options);
 
-    // only exact left
-    if (probeIdx === -1) {
-      return [...acc, ...options.map((x) => [x])];
-    }
-
-    const [probe] = options.splice(probeIdx, 1);
-
-    const deltaWeight = meanWeight - probe[1];
-
-    const donorIdx = options.findIndex(([_, weight]) => weight > meanWeight);
-    const [donor] = options.splice(donorIdx, 1);
-
-    const alias = [donor[0], deltaWeight] as [unknown, number];
-    const leftover = [donor[0], donor[1] - deltaWeight] as [unknown, number];
-
-    acc.push([probe, alias]);
-    options.push(leftover);
+  // if no underweight, then probably it's balanced
+  // just return `idx`-th
+  if (!probe) {
+    return [options[idx]];
   }
 
-  return acc;
+  const deltaWeight = meanWeight - probe[1];
+  const [complement, restOptions2] = slicePartialOverWeight(
+    meanWeight,
+    deltaWeight,
+    restOptions,
+  );
+
+  if (idx === 0) {
+    return [probe, complement];
+  } else {
+    return nthBalancedOption(idx - 1, restOptions2);
+  }
 };
 
-export function rollLoadedDie(
+export function rollLoadedDie<T>(
   rng: RandomNumberGenerator,
-  options: Map<unknown, number>,
-): unknown {
-  const entries = Array.from(options.entries());
-
-  const card = entries.length;
-
-  if (card === 1) {
-    const [value] = entries[0];
-    return value;
+  options: WeightedOption<T>[],
+): T {
+  switch (options.length) {
+    case 1:
+      // constant
+      const [value] = options[0];
+      return value;
+    case 2:
+      // coin logic
+      const [[v1, w1], [v2, w2]] = options;
+      return rng() < w1 / (w1 + w2) ? v1 : v2;
+    default:
+      // loaded die logic
+      const optionSlot = nthBalancedOption(
+        Math.floor(rng() * options.length),
+        options,
+      );
+      return rollLoadedDie(rng, optionSlot);
   }
-
-  if (card === 2) {
-    const [[v1, w1], [v2, w2]] = entries;
-    return rng() < w1 / (w1 + w2) ? v1 : v2;
-  }
-
-  const balancedSlots = makeTable(entries);
-  const slotIdx = Math.floor(rng() * card);
-
-  return rollLoadedDie(rng, new Map(balancedSlots[slotIdx]));
 }

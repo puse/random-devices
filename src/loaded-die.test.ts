@@ -3,14 +3,23 @@ import {
   assertArrayContains,
 } from "https://deno.land/x/std@0.65.0/testing/asserts.ts";
 
-import { rollLoadedDie, makeTable } from "./loaded-die.ts";
+import type { WeightedOption } from './weighted-option.ts';
+
+import { rollLoadedDie, nthBalancedOption } from "./loaded-die.ts";
 
 Deno.test("rollLoadedDie - signature", () => {
   const options = new Map<string, number>([
     ["a", 1],
     ["b", 2],
+    ["c", 3],
+    ["d", 4],
   ]);
-  const result = rollLoadedDie(Math.random, options);
+  const entries = Array.from(options.entries());
+  console.table(entries)
+
+  const result = rollLoadedDie(Math.random, entries);
+
+  console.log('>', result)
 
   assertArrayContains(Array.from(options.keys()), Array.of(result));
 });
@@ -22,7 +31,8 @@ Deno.test("rollLoadedDie - distribution", () => {
     ["c", 3],
     ["d", 6],
   ]);
-  const rollOnce = () => rollLoadedDie(Math.random, options);
+  const entries = Array.from(options.entries());
+  const rollOnce = () => rollLoadedDie(Math.random, entries);
   const results = Array.from(new Array(1000), rollOnce);
 
   // aggregate stats
@@ -42,12 +52,12 @@ Deno.test("rollLoadedDie - distribution", () => {
 });
 
 Deno.test("alias table", () => {
-  const options = new Map<string, number>([
+  const options: WeightedOption<string>[] = [
     ["a", 1],
     ["b", 2],
     ["c", 3],
     ["d", 6],
-  ]);
+  ];
 
   const table = [
     [["a", 1], ["d", 2]],
@@ -56,5 +66,5 @@ Deno.test("alias table", () => {
     [["d", 3]],
   ];
 
-  console.log(makeTable(Array.from(options.entries())));
+  console.log(nthBalancedOption(1, options));
 });
