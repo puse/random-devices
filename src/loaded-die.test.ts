@@ -5,6 +5,8 @@ import {
 
 import { rollLoadedDie } from "./loaded-die.ts";
 
+// --
+
 Deno.test("rollLoadedDie - signature", () => {
   const options = new Map<string, number>([
     ["a", 1],
@@ -12,10 +14,8 @@ Deno.test("rollLoadedDie - signature", () => {
     ["c", 3],
     ["d", 4],
   ]);
-  const entries = Array.from(options.entries());
-  console.table(entries);
 
-  const result = rollLoadedDie(Math.random, entries);
+  const result = rollLoadedDie(Math.random, options);
 
   console.log(">", result);
 
@@ -29,8 +29,7 @@ Deno.test("rollLoadedDie - distribution", () => {
     ["c", 3],
     ["d", 6],
   ]);
-  const entries = Array.from(options.entries());
-  const rollOnce = () => rollLoadedDie(Math.random, entries);
+  const rollOnce = () => rollLoadedDie(Math.random, options);
   const results = Array.from(new Array(1000), rollOnce);
 
   // aggregate stats
