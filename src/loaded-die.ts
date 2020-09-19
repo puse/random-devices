@@ -1,64 +1,26 @@
-import { pair, singleton } from "./common-utils.ts";
-import type { Pair, RandomNumberGenerator } from "./common-utils.ts";
+import type { NonEmptyList, RNG } from "./common-utils.ts";
 
-import { valueOf, weightOf } from "./weighted-option.ts";
-import type { WeightedOption } from "./weighted-option.ts";
+import { ratiosWithAliases } from "./load-helpers.ts";
 
-import {
-  meanWeightFor,
-  slicePartialOverWeight,
-  popUnderWeightSafe,
-} from "./weighted-option-list.ts";
-import { flipBiasedCoin } from "./biased-coin.ts";
+type Weight = number;
+type WeightedOptions<T> = Map<T, Weight>;
+type WeightIndex = NonEmptyList<Weight>;
 
-const nthBalancedOption = <T>(
-  idx: number,
-  options: WeightedOption<T>[],
-): WeightedOption<T>[] => {
-  return singleton(options[idx]);
-};
+const randomLoaded = (rng: RNG, load: WeightIndex): number => {
+  const [ratios, aliases] = ratiosWithAliases(load);
 
-const nthUnbalancedOption = <T>(
-  idx: number,
-  options: WeightedOption<T>[],
-): WeightedOption<T>[] => {
-  try {
-    const meanWeight = meanWeightFor(options);
-
-    const [probe, restOptions] = popUnderWeightSafe(meanWeight, options);
-
-    const deltaWeight = meanWeight - weightOf(probe);
-    const [complement, restOptions2] = slicePartialOverWeight(
-      meanWeight,
-      deltaWeight,
-      restOptions,
-    );
-
-    if (idx === 0) {
-      return pair<WeightedOption<T>>(probe, complement);
-    } else {
-      return nthUnbalancedOption(idx - 1, restOptions2);
-    }
-  } catch (err) {
-    return nthBalancedOption(idx, options);
-  }
+  // fair die mechanism
+  const slotIdx = Math.floor(rng() * load.length);
+  // biased coin mechanism
+  return rng() < ratios[slotIdx] ? slotIdx : aliases[slotIdx];
 };
 
 export function rollLoadedDie<T>(
-  rng: RandomNumberGenerator,
-  options: WeightedOption<T>[],
+  rng: RNG,
+  weightedOptions: WeightedOptions<T>,
 ): T {
-  switch (options.length) {
-    case 1:
-      // constant
-      return valueOf(options[0]);
-    case 2:
-      const coinOptions = options as Pair<WeightedOption<T>>;
-      return flipBiasedCoin(Math.random, coinOptions);
-    default:
-      // loaded die logic
-      const idx = Math.floor(rng() * options.length);
-      const optionSlot = nthUnbalancedOption(idx, options);
-      return rollLoadedDie(rng, optionSlot);
-  }
+  const options = [...weightedOptions.keys()];
+  const weights = [...weightedOptions.values()] as WeightIndex;
+
+  return options[randomLoaded(rng, weights)];
 }
